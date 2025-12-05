@@ -1,0 +1,33 @@
+.dashboard {
+  width: 100%;
+}
+
+.top-products-list,
+.drinks-per-hour-list {
+  list-style: none;
+  padding: 0;
+}
+
+.top-products-list li,
+.drinks-per-hour-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.top-products-list li:last-child,
+.drinks-per-hour-list li:last-child {
+  border-bottom: none;
+}
+
+.product-name,
+.hour {
+  font-weight: 500;
+}
+
+.product-revenue,
+.count {
+  color: #666;
+}
+
