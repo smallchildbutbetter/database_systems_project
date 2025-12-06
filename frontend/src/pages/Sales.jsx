@@ -5,13 +5,15 @@ import Table from '../components/Table';
 function Sales() {
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
+  const [stores, setStores] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     sale_date: '',
-    store_id: '1',
+    store_id: '',
     emp_id: '',
     customer_id: '',
     payment_method: 'Credit Card',
@@ -23,6 +25,8 @@ function Sales() {
   useEffect(() => {
     fetchSales();
     fetchProducts();
+    fetchStores();
+    fetchEmployees();
   }, []);
 
   const fetchSales = async () => {
@@ -48,15 +52,44 @@ function Sales() {
     }
   };
 
+  const fetchStores = async () => {
+    try {
+      const response = await axios.get('/api/stores');
+      setStores(response.data);
+      // Set default store if available
+      if (response.data.length > 0 && !formData.store_id) {
+        setFormData(prev => ({ ...prev, store_id: response.data[0].store_id.toString() }));
+      }
+    } catch (err) {
+      console.error('Failed to load stores', err);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get('/api/employees');
+      setEmployees(response.data);
+    } catch (err) {
+      console.error('Failed to load employees', err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Convert datetime-local to ISO string if provided
+      let saleDate = undefined;
+      if (formData.sale_date) {
+        // datetime-local format is YYYY-MM-DDTHH:mm, convert to ISO
+        saleDate = new Date(formData.sale_date).toISOString();
+      }
+
       const payload = {
-        sale_date: formData.sale_date || undefined,
+        sale_date: saleDate,
         store_id: parseInt(formData.store_id, 10),
-        emp_id: formData.emp_id ? parseInt(formData.emp_id, 10) : undefined,
-        customer_id: formData.customer_id ? parseInt(formData.customer_id, 10) : undefined,
-        payment_method: formData.payment_method || undefined,
+        emp_id: formData.emp_id ? parseInt(formData.emp_id, 10) : null,
+        customer_id: formData.customer_id ? parseInt(formData.customer_id, 10) : null,
+        payment_method: formData.payment_method || null,
         items: [
           {
             product_id: parseInt(formData.product_id, 10),
@@ -66,12 +99,18 @@ function Sales() {
         ],
       };
 
+      if (!formData.product_id) {
+        setError('Please select a product');
+        return;
+      }
+
       await axios.post('/api/sales', payload);
       setSuccess('Sale recorded successfully!');
+      setError(null);
       setShowForm(false);
       setFormData({
         sale_date: '',
-        store_id: '1',
+        store_id: stores.length > 0 ? stores[0].store_id.toString() : '',
         emp_id: '',
         customer_id: '',
         payment_method: 'Credit Card',
@@ -82,8 +121,10 @@ function Sales() {
       fetchSales();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create sale');
-      console.error(err);
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to create sale';
+      setError(errorMessage);
+      console.error('Sale creation error:', err);
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -154,21 +195,33 @@ function Sales() {
               />
             </label>
             <label>
-              Store ID
-              <input
-                type="number"
+              Store *
+              <select
                 value={formData.store_id}
                 onChange={(e) => setFormData({ ...formData, store_id: e.target.value })}
                 required
-              />
+              >
+                <option value="">Select store</option>
+                {stores.map((store) => (
+                  <option key={store.store_id} value={store.store_id}>
+                    {store.location}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
-              Employee ID
-              <input
-                type="number"
+              Employee
+              <select
                 value={formData.emp_id}
                 onChange={(e) => setFormData({ ...formData, emp_id: e.target.value })}
-              />
+              >
+                <option value="">Select employee (optional)</option>
+                {employees.map((emp) => (
+                  <option key={emp.emp_id} value={emp.emp_id}>
+                    {emp.name} {emp.role ? `(${emp.role})` : ''}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Customer ID

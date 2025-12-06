@@ -21,11 +21,11 @@ const saleItemSchema = z.object({
 });
 
 export const saleSchema = z.object({
-  sale_date: z.string().datetime().optional(),
+  sale_date: z.union([z.string(), z.date()]).optional().nullable(),
   store_id: z.number().int().positive(),
-  emp_id: z.number().int().positive().optional(),
-  customer_id: z.number().int().positive().nullable().optional(),
-  payment_method: z.string().max(20).optional(),
+  emp_id: z.number().int().positive().optional().nullable(),
+  customer_id: z.number().int().positive().optional().nullable(),
+  payment_method: z.string().max(20).optional().nullable(),
   items: z.array(saleItemSchema).min(1),
 });
 

@@ -11,6 +11,7 @@ import expensesRouter from './routes/expenses.js';
 import dashboardRouter from './routes/dashboard.js';
 import suppliersRouter from './routes/suppliers.js';
 import scheduleRouter from './routes/schedule.js';
+import storesRouter from './routes/stores.js';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/expenses', expensesRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/suppliers', suppliersRouter);
 app.use('/api/schedule', scheduleRouter);
+app.use('/api/stores', storesRouter);
 
 app.use(errorHandler);
 

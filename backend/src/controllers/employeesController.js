@@ -4,7 +4,20 @@ import { employeeSchema } from '../utils/validation.js';
 export const getEmployees = async (req, res, next) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM employee ORDER BY name'
+      `SELECT 
+        e.emp_id,
+        e.name,
+        e.role,
+        e.wage,
+        COALESCE(
+          STRING_AGG(DISTINCT st.location, ', ' ORDER BY st.location),
+          'No assigned location'
+        ) AS store_locations
+      FROM employee e
+      LEFT JOIN schedule sch ON e.emp_id = sch.emp_id
+      LEFT JOIN store st ON sch.store_id = st.store_id
+      GROUP BY e.emp_id, e.name, e.role, e.wage
+      ORDER BY e.name`
     );
     res.json(result.rows);
   } catch (error) {
@@ -61,24 +74,45 @@ export const updateEmployee = async (req, res, next) => {
 };
 
 export const deleteEmployee = async (req, res, next) => {
+  const client = await pool.connect();
   try {
     const empId = parseInt(req.params.id, 10);
     if (Number.isNaN(empId)) {
       return res.status(400).json({ error: 'Invalid employee id' });
     }
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    // Set employee to NULL in sales (preserve sales history)
+    await client.query(
+      'UPDATE sale SET emp_id = NULL WHERE emp_id = $1',
+      [empId]
+    );
+
+    // Delete schedule entries
+    await client.query(
+      'DELETE FROM schedule WHERE emp_id = $1',
+      [empId]
+    );
+
+    // Delete the employee
+    const result = await client.query(
       'DELETE FROM employee WHERE emp_id = $1 RETURNING *',
       [empId]
     );
 
     if (result.rowCount === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Employee not found' });
     }
 
+    await client.query('COMMIT');
     res.json({ success: true });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 };
 

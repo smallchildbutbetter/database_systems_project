@@ -39,6 +39,16 @@ function Expenses() {
       render: (value) => (value ? new Date(value).toLocaleDateString() : '-'),
     },
     { key: 'store_location', label: 'Store' },
+    { 
+      key: 'supplier_name', 
+      label: 'Supplier',
+      render: (value) => value || '-',
+    },
+    { 
+      key: 'supplier_contact', 
+      label: 'Supplier Contact',
+      render: (value) => value || '-',
+    },
     { key: 'note', label: 'Note' },
   ];
 
@@ -48,7 +58,9 @@ function Expenses() {
 
   return (
     <div>
-      <h1 className="page-title">Expenses</h1>
+      <div className="page-header">
+        <h1 className="page-title">Expenses</h1>
+      </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
         <Table columns={columns} rows={expenses} />

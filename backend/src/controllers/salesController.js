@@ -55,11 +55,21 @@ export const createSale = async (req, res, next) => {
     const productPriceMap = mapProductsById(productPricesResult.rows);
 
     await client.query('BEGIN');
+    
+    // Parse sale_date if it's a string
+    let parsedSaleDate = null;
+    if (sale_date) {
+      parsedSaleDate = sale_date instanceof Date ? sale_date : new Date(sale_date);
+      if (isNaN(parsedSaleDate.getTime())) {
+        throw new Error('Invalid sale date format');
+      }
+    }
+    
     const saleResult = await client.query(
       `INSERT INTO sale (sale_date, store_id, emp_id, customer_id, payment_method)
        VALUES (COALESCE($1, NOW()), $2, $3, $4, $5)
        RETURNING sale_id`,
-      [sale_date ? new Date(sale_date) : null, store_id, emp_id || null, customer_id || null, payment_method || null]
+      [parsedSaleDate, store_id, emp_id || null, customer_id || null, payment_method || null]
     );
 
     const saleId = saleResult.rows[0].sale_id;

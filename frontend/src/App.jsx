@@ -5,6 +5,8 @@ import Products from './pages/Products';
 import Sales from './pages/Sales';
 import Employees from './pages/Employees';
 import Expenses from './pages/Expenses';
+import Suppliers from './pages/Suppliers';
+import Optimization from './pages/Optimization';
 import './App.css';
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
           <Route path="/sales" element={<Sales />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/suppliers" element={<Suppliers />} />
+          <Route path="/optimization" element={<Optimization />} />
         </Routes>
       </main>
     </div>

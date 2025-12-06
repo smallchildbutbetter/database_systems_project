@@ -53,12 +53,19 @@ function Employees() {
   };
 
   const handleDelete = async (empId) => {
+    if (!window.confirm('Are you sure you want to delete this employee?')) {
+      return;
+    }
     try {
       await axios.delete(`/api/employees/${empId}`);
+      setSuccess('Employee deleted successfully');
       fetchEmployees();
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Failed to delete employee');
+      const errorMessage = err.response?.data?.error || 'Failed to delete employee';
+      setError(errorMessage);
       console.error(err);
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -70,6 +77,11 @@ function Employees() {
       key: 'wage',
       label: 'Wage',
       render: (value) => (value ? `$${parseFloat(value).toFixed(2)}` : '-'),
+    },
+    { 
+      key: 'store_locations', 
+      label: 'Store Location(s)',
+      render: (value) => value || 'No assigned location',
     },
     {
       key: 'actions',
